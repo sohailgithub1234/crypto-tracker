@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f8f8;
+        }
+        .header {
+            background-color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-weight: bold;
+            color: #f7931a;
+            font-size: 18px;
+        }
+        .nav a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+        }
+        .coin-info {
+            width: 30%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            margin-right: 20px;
+        }
+        .coin-logo {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            background-color: #f7931a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .coin-logo img {
+            width: 60px;
+            height: 60px;
+        }
+        .coin-details {
+            flex-grow: 1;
+        }
+        .coin-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .coin-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .coin-stats {
+            font-size: 14px;
+        }
+        .stat {
+            margin-bottom: 10px;
+        }
+        .stat-label {
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-value {
+            margin-left: 5px;
+        }
+        .chart-container {
+            width: 70%;
+        }
+        .time-filters {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+        .time-filter {
+            padding: 5px 10px;
+            margin-left: 5px;
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .time-filter.active {
+            background-color: #f7931a;
+            color: white;
+            border-color: #f7931a;
+        }
+        #priceChart {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="brand">Crypto Tracker</div>
+        <div class="nav-links">
+            <a href="#">Home</a>
+            <a href="#">Favourites</a>
+        </div>
+        <div class="search-container">
+            <input type="text" placeholder="Search...">
+            <div class="favourites">⭐</div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="coin-info">
+            <div class="coin-logo">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Bitcoin.svg" alt="Bitcoin">
+            </div>
+            <div class="coin-details">
+                <div class="coin-name">Bitcoin</div>
+                <div class="coin-description">Bitcoin is the first successful internet money based on peer-to-peer technology, whereby no central bank or authority is involved in the transaction and production of the Bitcoin currency.</div>
+                <div class="coin-stats">
+                    <div class="stat">
+                        <span class="stat-label">Rank:</span>
+                        <span class="stat-value" id="rank">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Current Price:</span>
+                        <span class="stat-value" id="current-price">$61,498</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Market Cap:</span>
+                        <span class="stat-value" id="market-cap">$1,215,141,660,318</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-container">
+            <div class="time-filters">
+                <div class="time-filter" onclick="fetchChartData('1')">24h</div>
+                <div class="time-filter" onclick="fetchChartData('30')">30d</div>
+                <div class="time-filter active" onclick="fetchChartData('90')">3m</div>
+            </div>
+            <canvas id="priceChart"></canvas>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        async function fetchCryptoData() {
+            const response = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin');
+            const data = await response.json();
+            document.getElementById('current-price').innerText = `$${data.market_data.current_price.usd.toLocaleString()}`;
+            document.getElementById('market-cap').innerText = `$${data.market_data.market_cap.usd.toLocaleString()}`;
+        }
+
+        async function fetchChartData(days) {
+            const response = await fetch(`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${days}`);
+            const data = await response.json();
+            const prices = data.prices.map(price => price[1]);
+            const labels = data.prices.map(price => new Date(price[0]).toLocaleDateString());
+
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Price (USD)',
+                        data: prices,
+                        borderColor: '#f7931a',
+                        backgroundColor: 'rgba(247, 147, 26, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCryptoData();
+            fetchChartData('90');
+        });
+    </script>
+</body>
+</html>
